@@ -27,17 +27,12 @@ copy_dir()
 SELECT_SLICE_RETVAL=""
 
 select_slice() {
-echo "select_slice"
-
   local paths=("$@")
   # Locate the correct slice of the .xcframework for the current architectures
   local target_path=""
 
   # Split archs on space so we can find a slice that has all the needed archs
   local target_archs=$(echo $ARCHS | tr " " "\n")
-
-  echo "paths: $paths"
-  echo "target_archs: $target_archs"
 
   local target_variant=""
   if [[ "$PLATFORM_NAME" == *"simulator" ]]; then
@@ -47,16 +42,10 @@ echo "select_slice"
     target_variant="maccatalyst"
   fi
   for i in ${!paths[@]}; do
-  
-    echo "i: $i"
-    echo '${paths[$i]}:'
-    echo "${paths[$i]}"
-  
     local matched_all_archs="1"
     for target_arch in $target_archs
     do
       if ! [[ "${paths[$i]}" == *"$target_variant"* ]]; then
-        echo "Didnt match variant $target_variant"
         matched_all_archs="0"
         break
       fi
@@ -64,7 +53,6 @@ echo "select_slice"
       # Verifies that the path contains the variant string (simulator or maccatalyst) if the variant is set.
       if [[ -z "$target_variant" && ("${paths[$i]}" == *"simulator"* || "${paths[$i]}" == *"maccatalyst"*) ]]; then
         matched_all_archs="0"
-        echo "matched but break ${paths[$i]}"
         break
       fi
 
@@ -77,7 +65,6 @@ echo "select_slice"
       # any .framework. In that case, the folder name can be: ios-arm64_armv7
       # We also match _armv7$ to handle that case.
       local target_arch_regex="[_\-]${target_arch}([\/_\-]|$)"
-      echo "target_arch_regex: $target_arch_regex"
       if ! [[ "${paths[$i]}" =~ $target_arch_regex ]]; then
         matched_all_archs="0"
         break
@@ -137,16 +124,10 @@ install_xcframework_library() {
 }
 
 install_xcframework() {
-
-echo "install_xcframework"
-
   local basepath="$1"
   local name="$2"
   local package_type="$3"
   local paths=("$@")
-
-
-echo "paths: $paths"
 
   # Locate the correct slice of the .xcframework for the current architectures
   select_slice "${paths[@]}"
@@ -155,13 +136,6 @@ echo "paths: $paths"
     echo "warning: [CP] Unable to find matching .xcframework slice in '${paths[@]}' for the current build architectures ($ARCHS)."
     return
   fi
-  
-  echo "basepath"
-  echo "$basepath"
-
-  echo "target_path"
-  echo "$target_path"
-  
   local source="$basepath/$target_path"
 
   local destination="${PODS_XCFRAMEWORKS_BUILD_DIR}/${name}"
